@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "518363031734",
+    "firebase_url": "https://myvault-34a27-default-rtdb.firebaseio.com",
+    "project_id": "myvault-34a27",
+    "storage_bucket": "myvault-34a27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:518363031734:android:e811fe42d9d7d132e65e17",
+        "android_client_info": {
+          "package_name": "com.LinkNest.linknest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "518363031734-e5e7t38r65qbg6tc87427olkrcbau6es.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.LinkNest.linknest",
+            "certificate_hash": "35829b7c6496aa1f62e087a67f64d0ced201ac9c"
+          }
+        },
+        {
+          "client_id": "518363031734-hto1tgjrj1ceus11bme8agsf94sb2bdd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuZEq1cRCVG13b_GzOIYzn4k1WKk707Nk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "518363031734-hto1tgjrj1ceus11bme8agsf94sb2bdd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

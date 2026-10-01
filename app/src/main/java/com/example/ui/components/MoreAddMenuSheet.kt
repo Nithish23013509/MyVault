@@ -52,6 +52,8 @@ import com.example.ui.theme.VaultSurfaceElevated
 import com.example.ui.theme.VaultTextPrimary
 import com.example.ui.theme.VaultTextSecondary
 
+import androidx.compose.foundation.layout.navigationBarsPadding
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreAddMenuSheet(
@@ -71,7 +73,8 @@ fun MoreAddMenuSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
@@ -178,7 +181,7 @@ fun MoreAddMenuSheet(
                 icon = Icons.Default.Key,
                 iconColor = PurpleDoc,
                 title = "Multi-Field Record",
-                subtitle = "Structured cards (Driving Licence, Vehicle, College...)",
+                subtitle = "Store multiple links, phones, emails & custom fields in one item",
                 onClick = {
                     onSelectMultiFieldRecord()
                     onDismiss()

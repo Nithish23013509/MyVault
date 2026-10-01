@@ -12,10 +12,17 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -151,7 +158,9 @@ fun MultiFieldRecordSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -249,7 +258,9 @@ fun MultiFieldRecordSheet(
                 ExposedDropdownMenu(
                     expanded = collectionDropdownExpanded,
                     onDismissRequest = { collectionDropdownExpanded = false },
-                    modifier = Modifier.background(VaultSurfaceElevated)
+                    modifier = Modifier
+                        .background(VaultSurfaceElevated)
+                        .heightIn(max = 240.dp)
                 ) {
                     collections.forEach { col ->
                         DropdownMenuItem(
@@ -337,14 +348,79 @@ fun MultiFieldRecordSheet(
                                 }
                             }
 
+                            // Field Type Selector Pills
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val fieldTypes = listOf(
+                                    "text" to "Text 📝",
+                                    "link" to "Link 🔗",
+                                    "phone" to "Phone ☎",
+                                    "email" to "Email ✉",
+                                    "password" to "Pass 🔐",
+                                    "number" to "Num #"
+                                )
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    fieldTypes.forEach { (tKey, tLabel) ->
+                                        val isSelected = field.type == tKey
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (isSelected) EmeraldPrimary.copy(alpha = 0.25f) else VaultSurfaceDark)
+                                                .border(1.dp, if (isSelected) EmeraldPrimary else VaultBorder, RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    val isPass = tKey == "password"
+                                                    fieldsList[index] = field.copy(
+                                                        type = tKey,
+                                                        sensitive = if (isPass) true else field.sensitive
+                                                    )
+                                                }
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = tLabel,
+                                                color = if (isSelected) EmeraldPrimary else VaultTextSecondary,
+                                                fontSize = 11.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             var showVal by remember { mutableStateOf(!field.sensitive) }
+                            val kbType = when (field.type) {
+                                "link" -> KeyboardType.Uri
+                                "phone" -> KeyboardType.Phone
+                                "email" -> KeyboardType.Email
+                                "number" -> KeyboardType.Number
+                                "password" -> KeyboardType.Password
+                                else -> KeyboardType.Text
+                            }
                             OutlinedTextField(
                                 value = field.value,
                                 onValueChange = { newVal ->
                                     fieldsList[index] = field.copy(value = newVal)
                                 },
-                                label = { Text("Value", fontSize = 11.sp) },
-                                singleLine = true,
+                                label = {
+                                    val labelText = when (field.type) {
+                                        "link" -> "URL / Link"
+                                        "phone" -> "Phone Number"
+                                        "email" -> "Email Address"
+                                        "password" -> "Secret / Password"
+                                        "number" -> "Numeric Code / Number"
+                                        else -> "Value"
+                                    }
+                                    Text(labelText, fontSize = 11.sp)
+                                },
+                                singleLine = field.type != "text",
+                                keyboardOptions = KeyboardOptions(keyboardType = kbType),
                                 visualTransformation = if (field.sensitive && !showVal) PasswordVisualTransformation() else VisualTransformation.None,
                                 trailingIcon = {
                                     if (field.sensitive) {
@@ -421,6 +497,33 @@ fun MultiFieldRecordSheet(
                             .background(EmeraldPrimary.copy(alpha = 0.2f))
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add tag", tint = EmeraldPrimary)
+                    }
+                }
+
+                // Quick Suggested Tags
+                val suggestedTags = listOf("Important", "Personal", "Work", "Banking", "Login")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    suggestedTags.forEach { sugTag ->
+                        if (!tagsList.contains(sugTag)) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(VaultSurfaceDark)
+                                    .border(1.dp, VaultBorder, RoundedCornerShape(6.dp))
+                                    .clickable { tagsList.add(sugTag) }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "+ #$sugTag",
+                                    color = VaultTextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
                     }
                 }
             }

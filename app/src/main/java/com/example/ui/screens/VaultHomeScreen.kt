@@ -344,6 +344,10 @@ fun VaultHomeScreen(
                 showAddSheet = false
                 itemToEdit = null
             },
+            onSwitchToMultiFieldRecord = {
+                showAddSheet = false
+                showMultiFieldSheet = true
+            },
             onDismiss = {
                 showAddSheet = false
                 itemToEdit = null

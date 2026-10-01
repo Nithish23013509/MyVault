@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.security.BiometricAuthManager
 import com.example.ui.VaultViewModel
 import com.example.ui.screens.LockScreen
+import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.VaultHomeScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.VaultBgDark
@@ -44,6 +45,11 @@ class MainActivity : FragmentActivity() {
                         .safeDrawingPadding(),
                     color = VaultBgDark
                 ) {
+                    val isLoginPassed by viewModel.isLoginPassed.collectAsStateWithLifecycle()
+                    val isAuthLoading by viewModel.isAuthLoading.collectAsStateWithLifecycle()
+                    val authError by viewModel.authError.collectAsStateWithLifecycle()
+                    val cloudSyncStatus by viewModel.cloudSyncStatus.collectAsStateWithLifecycle()
+
                     val isUnlocked by viewModel.isUnlocked.collectAsStateWithLifecycle()
                     val isSetupCompleted by viewModel.isSetupCompleted.collectAsStateWithLifecycle()
                     val isBiometricAvailable by viewModel.isBiometricAvailable.collectAsStateWithLifecycle()
@@ -68,13 +74,31 @@ class MainActivity : FragmentActivity() {
                     }
 
                     // Auto prompt biometrics on launch if available and already setup
-                    LaunchedEffect(isSetupCompleted, isUnlocked) {
-                        if (isSetupCompleted && !isUnlocked && isBiometricAvailable) {
+                    LaunchedEffect(isLoginPassed, isSetupCompleted, isUnlocked) {
+                        if (isLoginPassed && isSetupCompleted && !isUnlocked && isBiometricAvailable) {
                             promptBiometric()
                         }
                     }
 
-                    if (!isUnlocked) {
+                    if (!isLoginPassed) {
+                        LoginScreen(
+                            isLoading = isAuthLoading,
+                            statusMessage = cloudSyncStatus,
+                            authError = authError,
+                            onGoogleSignIn = { activity ->
+                                viewModel.signInWithGoogle(activity)
+                            },
+                            onEmailSignIn = { email, pass ->
+                                viewModel.signInWithEmail(email, pass)
+                            },
+                            onEmailSignUp = { email, pass ->
+                                viewModel.signUpWithEmail(email, pass)
+                            },
+                            onContinueLocal = {
+                                viewModel.continueLocalMode()
+                            }
+                        )
+                    } else if (!isUnlocked) {
                         LockScreen(
                             isSetupMode = !isSetupCompleted,
                             isBiometricAvailable = isBiometricAvailable,

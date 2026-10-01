@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -88,6 +91,7 @@ fun AddEditVaultItemSheet(
     defaultType: VaultItemType = VaultItemType.LINK,
     collections: List<VaultCollection>,
     onSave: (VaultItem) -> Unit,
+    onSwitchToMultiFieldRecord: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -130,7 +134,9 @@ fun AddEditVaultItemSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -187,7 +193,9 @@ fun AddEditVaultItemSheet(
                 ExposedDropdownMenu(
                     expanded = typeDropdownExpanded,
                     onDismissRequest = { typeDropdownExpanded = false },
-                    modifier = Modifier.background(VaultSurfaceElevated)
+                    modifier = Modifier
+                        .background(VaultSurfaceElevated)
+                        .heightIn(max = 240.dp)
                 ) {
                     val selectableTypes = listOf(
                         VaultItemType.LINK,
@@ -342,6 +350,34 @@ fun AddEditVaultItemSheet(
                 }
             }
 
+            onSwitchToMultiFieldRecord?.let { onSwitch ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(PurpleDoc.copy(alpha = 0.12f))
+                        .border(1.dp, PurpleDoc.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                        .clickable {
+                            onDismiss()
+                            onSwitch()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = PurpleDoc, modifier = Modifier.size(18.dp))
+                        Text(
+                            text = "Need multiple links, phones, emails or custom fields? Switch to Multi-Field Record →",
+                            color = VaultTextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
             // 4. Collection Dropdown
             ExposedDropdownMenuBox(
                 expanded = collectionDropdownExpanded,
@@ -364,7 +400,9 @@ fun AddEditVaultItemSheet(
                 ExposedDropdownMenu(
                     expanded = collectionDropdownExpanded,
                     onDismissRequest = { collectionDropdownExpanded = false },
-                    modifier = Modifier.background(VaultSurfaceElevated)
+                    modifier = Modifier
+                        .background(VaultSurfaceElevated)
+                        .heightIn(max = 240.dp)
                 ) {
                     collections.forEach { col ->
                         DropdownMenuItem(
@@ -434,6 +472,33 @@ fun AddEditVaultItemSheet(
                             .background(EmeraldPrimary.copy(alpha = 0.2f))
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add tag", tint = EmeraldPrimary)
+                    }
+                }
+
+                // Quick Suggested Tags
+                val suggestedTags = listOf("Important", "Personal", "Work", "Banking", "Login")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    suggestedTags.forEach { sugTag ->
+                        if (!tagsList.contains(sugTag)) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(VaultSurfaceDark)
+                                    .border(1.dp, VaultBorder, RoundedCornerShape(6.dp))
+                                    .clickable { tagsList.add(sugTag) }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "+ #$sugTag",
+                                    color = VaultTextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
                     }
                 }
             }

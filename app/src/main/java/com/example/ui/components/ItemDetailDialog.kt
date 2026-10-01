@@ -431,18 +431,26 @@ fun ItemDetailDialog(
             }
 
             // Multi-Field Details (If Record)
+            data class RecordFieldInfo(
+                val name: String,
+                val type: String,
+                val value: String,
+                val sensitive: Boolean
+            )
+
             val parsedRecordFields = remember(item.value) {
                 if (item.type == VaultItemType.RECORD && item.value.startsWith("[")) {
                     try {
                         val arr = JSONArray(item.value)
-                        val list = mutableListOf<Triple<String, String, Boolean>>()
+                        val list = mutableListOf<RecordFieldInfo>()
                         for (i in 0 until arr.length()) {
                             val fobj = arr.getJSONObject(i)
                             list.add(
-                                Triple(
-                                    fobj.optString("name", "Field"),
-                                    fobj.optString("value", ""),
-                                    fobj.optBoolean("sensitive", false)
+                                RecordFieldInfo(
+                                    name = fobj.optString("name", "Field"),
+                                    type = fobj.optString("type", "text"),
+                                    value = fobj.optString("value", ""),
+                                    sensitive = fobj.optBoolean("sensitive", false)
                                 )
                             )
                         }
@@ -458,7 +466,7 @@ fun ItemDetailDialog(
             if (parsedRecordFields.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Record Fields", color = VaultTextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    parsedRecordFields.forEach { (fname, fval, fsensitive) ->
+                    parsedRecordFields.forEach { rField ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -469,15 +477,84 @@ fun ItemDetailDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(fname, color = VaultTextSecondary, fontSize = 11.sp)
+                                val typeIcon = when (rField.type) {
+                                    "link" -> "🔗 "
+                                    "phone" -> "☎ "
+                                    "email" -> "✉ "
+                                    "password" -> "🔐 "
+                                    "number" -> "# "
+                                    else -> ""
+                                }
+                                Text("$typeIcon${rField.name}", color = VaultTextSecondary, fontSize = 11.sp)
                                 Text(
-                                    text = if (fsensitive && !isRevealed) "••••••••" else fval,
+                                    text = if (rField.sensitive && !isRevealed) "••••••••" else rField.value,
                                     color = VaultTextPrimary,
-                                    fontSize = 14.sp
+                                    fontSize = 14.sp,
+                                    fontFamily = if (rField.type == "password" || rField.sensitive) FontFamily.Monospace else FontFamily.Default
                                 )
                             }
-                            IconButton(onClick = { onCopy(fname, fval) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Action button based on field type
+                                if (rField.value.isNotBlank()) {
+                                    when (rField.type) {
+                                        "link" -> {
+                                            IconButton(
+                                                onClick = {
+                                                    val urlStr = if (!rField.value.startsWith("http://") && !rField.value.startsWith("https://")) {
+                                                        "https://${rField.value}"
+                                                    } else rField.value
+                                                    try {
+                                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(urlStr)))
+                                                    } catch (e: Exception) {
+                                                        onCopy(rField.name, rField.value)
+                                                    }
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(Icons.Default.OpenInBrowser, contentDescription = "Open link", tint = IndigoLink, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                        "phone" -> {
+                                            IconButton(
+                                                onClick = {
+                                                    try {
+                                                        context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${rField.value}")))
+                                                    } catch (e: Exception) {
+                                                        onCopy(rField.name, rField.value)
+                                                    }
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(Icons.Default.Phone, contentDescription = "Call phone", tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                        "email" -> {
+                                            IconButton(
+                                                onClick = {
+                                                    try {
+                                                        context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${rField.value}")))
+                                                    } catch (e: Exception) {
+                                                        onCopy(rField.name, rField.value)
+                                                    }
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(Icons.Default.Email, contentDescription = "Send email", tint = CyanAccent, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
+                                }
+
+                                IconButton(
+                                    onClick = { onCopy(rField.name, rField.value) },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
+                                }
                             }
                         }
                     }

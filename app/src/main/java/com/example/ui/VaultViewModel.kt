@@ -143,6 +143,13 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     val isAuthLoading: StateFlow<Boolean> = authManager.isLoading
     val authError: StateFlow<String?> = authManager.authError
 
+    private val _isLoginPassed = MutableStateFlow(authManager.currentUser.value != null)
+    val isLoginPassed: StateFlow<Boolean> = _isLoginPassed.asStateFlow()
+
+    fun continueLocalMode() {
+        _isLoginPassed.value = true
+    }
+
     private val _isCloudSyncing = MutableStateFlow(false)
     val isCloudSyncing: StateFlow<Boolean> = _isCloudSyncing.asStateFlow()
 
@@ -714,6 +721,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             _cloudSyncStatus.value = "Authenticating with Google..."
             val result = authManager.signInWithGoogle(activity)
             result.onSuccess { user ->
+                _isLoginPassed.value = true
                 _cloudSyncStatus.value = "Connected as ${user.displayName ?: user.email}"
                 _statusMessage.value = "Google Sign-In successful. Firestore sync active."
                 syncWithFirestore()
@@ -743,6 +751,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             _cloudSyncStatus.value = "Signing in with email..."
             val result = authManager.signInWithEmail(email, pass)
             result.onSuccess { user ->
+                _isLoginPassed.value = true
                 _cloudSyncStatus.value = "Connected as ${user.email}"
                 _statusMessage.value = "Signed in as ${user.email}"
                 syncWithFirestore()
@@ -764,6 +773,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             _cloudSyncStatus.value = "Creating Firebase account..."
             val result = authManager.signUpWithEmail(email, pass)
             result.onSuccess { user ->
+                _isLoginPassed.value = true
                 _cloudSyncStatus.value = "Account created: ${user.email}"
                 _statusMessage.value = "Account created. Firestore sync active."
                 syncWithFirestore()
